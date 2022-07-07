@@ -1,0 +1,284 @@
+---
+title: "Map changes in the number of cows in U.S. counties (1997 - 2017)"
+author: Haley Fox
+date: July 6, 2022
+toc: true
+toc-depth: 3
+number-sections: true
+number-depth: 3
+format: html
+editor: visual
+---
+
+## About the data 🐮
+
+These data were collected as part of the US Agricultural Census and include the number of cows in each US county in 1997, 2002, 2007, 2012, and 2017. US counties are identified by their unique five digit FIPS code. Data were downloaded from the [USDA - National Agricultural Statistics Service](https://www.nass.usda.gov/AgCensus/).
+
+## Objectives
+
+1.  Map the change in the number of cows in each US county from 1997 to 2017
+
+2.  Add an image of a cow to a plot
+
+3.  Use `facet_wrap` to plot a grid of maps of cow counts by US county for each year of data available
+
+## Coding time!
+
+### Load libraries and read in data
+
+```{r}
+#| label: load-packages
+#| output: false
+if (!require(librarian)) {
+  install.packages("librarian")
+  library(librarian)
+}
+
+librarian::shelf(here, #creates paths relative to the top-level directory
+                 readr, #reads csv
+                 ggplot2, #for plotting data
+                 magrittr, #contains the pipe function
+                 tidyr, #for tidying data 
+                 dplyr, #data manipulation 
+                 ggeasy, #customize ggplots
+                 patchwork, #more customization of ggplots
+                 png, #for working with .png files in R
+                 usmap) #maps US data using FIPS code
+```
+
+Read in data from the github [repository](https://github.com/haleyepperlyfox/us-cow-map).
+
+```{r}
+#| label: load-data
+#| output: false
+cows <- read_csv(here("1997_2017_us_county_cow_counts.csv"))
+```
+
+```{r}
+#| label: view-data
+head(cows)
+```
+
+### Format data
+
+We want to create a new column that shows the difference in the number of cows from 1997 to 2017. First, we need to convert the data from long format (years as one column and cow counts as one column) to wide format (cow counts for each year as its own column). We can do this easily using `pivot_wider` from the `tidyr` package.
+
+```{r}
+#| label: long-to-wide
+cow_wide <- cows %>% 
+  pivot_wider(names_from = year, values_from = cow_count)
+head(cow_wide)
+```
+
+Now we can use these wide data to calculate the number of animals in 2017 minus the number of animals in 1997 and save the difference as a new column. We use `mutate` in the `dplyr` package to create a new variable called `cow_diff` and add it to our dataframe.
+
+When we pivoted from long to wide format, R automatically created new columns representing the number of cows in each year. Since these column names are numbers representing the years of data, we have to use backticks \`\` to tell R that we want to subtract the 1997 column from the 2017 column rather than subtracting the number 1997 from the number 2017.
+
+```{r}
+#| label: calc-difference
+cow_wide <- cow_wide %>% 
+  mutate(cow_diff = `2017` - `1997`)
+head(cow_wide)
+```
+
+### First map of cow difference
+
+We can quickly plot the data using `plot_usmap` from the `usmap` package. This package uses the FIPS codes (standardized unique county identifiers) in our dataframe to know where to put county values.
+
+```{r}
+#| label: create-map-1
+plot_usmap(data = cow_wide, values = "cow_diff", size = .1) +
+  scale_fill_gradient2(label = scales::comma) 
+```
+
+There are immediately some things that pop out with this map. First off, the legend is covering part of the map. Second, we can see some counties are missing data and are represented as dark gray. Third, most of the variation in the map isn't visible because there are few counties that either drastically increased or decreased the amount of cows in them from 1997 to 2017. To better visualize the variation in the data, we can add cutoff points where all values above a certain amount are set to that amount. For example, we can set all values above 100,000 to equal 100,000. Let's figure out what our cutoffs should be.
+
+### Determine cow difference cutoffs
+
+Create a histogram to visualize the distribution.
+
+```{r}
+#| label: histogram-diff
+#| code-overflow: wrap
+hist(cow_wide$cow_diff, main = "Histogram of cow difference (1997 - 2017)",
+     xlab = "Cow difference")
+```
+
+Calculate how many values are above or below potential thresholds.
+
+```{r}
+#| label: diff-values-above-cutoffs
+length(which(cow_wide$cow_diff>100000))
+length(which(cow_wide$cow_diff>50000))
+```
+
+```{r}
+#| label: diff-values-below-cutoffs
+length(which(cow_wide$cow_diff<(-100000)))
+length(which(cow_wide$cow_diff<(-50000)))
+```
+
+Since only 36 counties (1.2% of the data) have values above 50,000 and only 10 counties have values below -50,000, we will use these as out cutoffs.
+
+We can use `case_when` in `dplyr` to say replace all values over 50,000 with 50,000 in a new column `diff_cutoff`, and similarly with values below -50,000.
+
+```{r}
+#| label: cutoff-diff-outliers
+cow_wide_cutoff <- cow_wide %>% 
+  mutate(diff_cutoff = case_when(cow_diff > 50000 ~ 50000,
+                   cow_diff < (-50000) ~ (-50000),
+                   TRUE ~ cow_diff))
+```
+
+### Better map of cow difference
+
+Now let's plot the data again with these new cutoffs. We'll specify where the breaks in the gradient should be so that we can give labels to these breaks (e.g., -50,000- and 50,000+). Let's also move the legend over to the right so it's not blocking Alaska with the `easy_move_legend` in the `ggeasy` package. Lastly, we an add titles to the plot and legend and do some text size formatting.
+
+```{r}
+#| label: create-map-2
+#| code-overflow: wrap
+plot_usmap(data = cow_wide_cutoff, values = "diff_cutoff", size = .1) +
+  labs(title = "Change in the number of cows per U.S. county from 1997 to 2017") +
+  scale_fill_gradient2(breaks = c(-50000, -25000, 0, 25000, 50000),
+                       labels = c("-50,000-", "-25,000", "0", "25,000", "50,000+"), 
+                       name = "Cow difference") + 
+  easy_move_legend(to = c("right")) +
+  theme(plot.title = element_text(size=16), 
+        legend.title = element_text(size=12), 
+        legend.text = element_text(size=10))
+```
+
+We did it! 🥳
+
+A simple map showing where in the US there are fewer cows than there were in 1997 and where there are more cows. We can see that cows have mostly decreased in counties during those 20 years.
+
+That map conveys the information, but maybe we want to get a little extra spicy and add a picture of a cow to the plot. I found a free downloadable image of a cow from a clipart [website](http://clipart-library.com/cow-images-free.html). Then I read in the image using `readPNG` from the `png` package. I added the image into the plot using `inset_element` from the `patchwork` package, and I played around with where I wanted the image to go and how big it should be by adjusting the arguments for `left`, `bottom`, `right`, and `top`.
+
+```{r}
+#| label: load-image
+my_image <- readPNG(here("cow.png"), native = TRUE)
+```
+
+```{r}
+#| label: create-map-with-image
+#| code-overflow: wrap
+plot_usmap(data = cow_wide_cutoff, values = "diff_cutoff", size = .1) +
+  labs(title = "Change in the number of cows per U.S. county from 1997 to 2017") +
+  scale_fill_gradient2(breaks = c(-50000, -25000, 0, 25000, 50000),
+                       labels = c("-50,000-", "-25,000", "0", "25,000", "50,000+"), 
+                       name = "Cow difference") + 
+  easy_move_legend(to = c("right")) +
+  theme(plot.title = element_text(size=16), 
+        legend.title = element_text(size=12), 
+        legend.text = element_text(size=10)) + 
+  inset_element(p = my_image,
+                left = 0.95,
+                bottom = 0.45,
+                right = 1.25,
+                top = 0.65)
+```
+
+Look at that cute little cartoon cow we have in our plot now! 🐄
+
+Before we finish up, let's plot these data one more way. Let's use `facet_wrap` to plot each year of the data in a grid. So this time rather than looking at the difference in cows from 1997 to 2017, we'll look at the number of cows in 1997, 2002, 2007, 2012, and 2017 all plotted at once.
+
+There is a slight issue that comes up when we use `facet_wrap` with `plot_usmap` and we don't have values for every US county, like in our cow data. When our cow data is merged with the county spatial data in the `usmap` package for plotting, it adds NAs where we are missing data. This was fine with our previous plots as those missing counties were simply plotted in dark gray. However, when using `facet_wrap`, it excludes these counties entirely rather than plotting their boundaries and filling in with dark gray. For example, we don't have cow data for Alaska, so the state of Alaska is not shown at all when using `facet_wrap`. Also, there is a separate plot created that only includes counties with NAs, which we don't need in this case. To fix this issue, let's add in rows for all of our missing counties and fill them in with zeros.
+
+### Missing FIPS codes
+
+We can find out which FIPS codes we are missing by first joining our data with the county map data stored in the `usmap` package using the `map_with_data` function.
+
+```{r}
+#| label: join-w-county-data
+data_check <- map_with_data(cows, values = "cow_count")
+data_check$fips <- as.numeric(data_check$fips)
+```
+
+Then we can find out which FIPS codes are included in the joined dataframe that weren't included in our original cow dataframe. There are 83 counties which are missing data in our cow dataframe.
+
+```{r}
+#| label: missing-fips
+missing_fips <- setdiff(unique(data_check$fips), unique(cows$fips))
+missing_fips
+```
+
+Next we can loop through all of the missing FIPS codes and create a dataframe with each missing FIPS code in each year (1997 - 2017) with their cow count set to 0.
+
+```{r}
+#| label: missing-df
+missing_data <- data.frame()
+for(fip in missing_fips){ 
+  missing_data_1 <- data.frame(year = sort(unique(cows$year)),
+                           cow_count = 0,
+                           fips = fip)
+missing_data <- rbind(missing_data_1, missing_data)
+}
+head(missing_data)
+```
+
+Lastly, we can bind the missing FIPS dataframe with our original cow dataframe. Now all FIPS codes are included and we can create a grid of maps with `facet_wrap`.
+
+```{r}
+#| label: bind-w-missing-data
+cows_all_counties <- rbind(cows, missing_data)
+```
+
+### Determine cow count cutoffs
+
+Now that we're not working with the difference in cow number anymore, we need to find new cutoffs for our data for better map visualization. Let's first visualize the data with a histogram.
+
+```{r}
+#| label: histogram-count
+#| code-overflow: wrap
+hist(cows_all_counties$cow_count, main = "Histogram of cow count",
+     xlab = "Number of cows")
+```
+
+It looks like most of the data taper off after about 200,000. Let's see how many data points are above 200,000.
+
+```{r}
+#| label: count-values-over-cutoff
+length(which(cows_all_counties$cow_count > 200000))
+```
+
+Since only 188 data points (1.2% of the data across all years) are above 200,000, let's make that our cutoff. We don't need a lower cutoff this time because we're not looking at a change in cow count over time. Create a new column called `cutoff` and set all values for `cow_count` over 200,000 to equal 200,000 in this new column.
+
+```{r}
+#| label: cutoff-count-outliers
+cow_long_cutoff <- cows_all_counties %>% 
+  mutate(cutoff = case_when(cow_count > 200000 ~ 200000,
+                   TRUE ~ cow_count))
+```
+
+### Grid of plots by year
+
+Now plot the five maps altogether using `facet_wrap`!
+
+Given that these maps are smaller, we can change the line width of the county borders by lowering `size` to 0.03. We can also add a caption below the plot to indicate where the data came from. To put the legend in a more precise spot, we can mess around with the x and y values until it lines up where we want it. Lastly, let's add the cartoon cow back in as a legend title for a little fun.
+
+```{r}
+#| label: facet-wrap-maps
+#| code-overflow: wrap
+  
+plot_usmap(data = cow_long_cutoff, values = "cutoff", size = .03) +
+  labs(title = "Number of cows per U.S. county (1997 - 2017)", caption = "Data soure: USDA - National Agricultural Statistics Service") +
+  scale_fill_gradient2(breaks = c(0, 50000, 100000, 150000, 200000),
+                       labels = c( "0", "50,000", "100,000", "150,000", "200,000+"), 
+                       name = "") +
+  facet_wrap(vars(year))  +
+  cowplot::theme_map(11) +
+  theme(plot.title = element_text(size=16), 
+        legend.title = element_text(size=12), 
+        legend.text = element_text(size=10),
+        plot.caption=element_text(color="#37363A", hjust=0, margin=margin(t=10)),
+        plot.margin=margin(.4, .4, .4, .4, unit="cm"),
+        strip.text = element_text(face="bold", size=11.5),
+        legend.position = c(0.75, 0.25)) +
+    inset_element(p = my_image,
+                left = 0.68,
+                bottom = 0.38,
+                right = .9,
+                top = 0.55)
+```
+
+While this plot looks nice, it's not a very useful grid to visualize change in the number of cows across US counties over time. Our earlier map that plotted the difference in cows from 1997 to 2017 made it much clearer in which counties cows were increasing or decreasing.
