@@ -12,7 +12,7 @@ editor: visual
 
 ## About the data 🐮
 
-These data were collected as part of the US Agricultural Census and include the number of cows in each US county in 1997, 2002, 2007, 2012, and 2017. US counties are identified by their unique five digit FIPS code. Data were downloaded from the [USDA - National Agricultural Statistics Service](https://www.nass.usda.gov/AgCensus/).
+These data were collected as part of the US Agricultural Census and include the number of cows in each US county in 1997, 2002, 2007, 2012, and 2017. US counties are identified by their unique five digit FIPS code. Data were downloaded from the [USDA - National Agricultural Statistics Service](https://www.nass.usda.gov/AgCensus/){target="_blank"}.
 
 ## Objectives
 
@@ -46,7 +46,7 @@ librarian::shelf(here, #creates paths relative to the top-level directory
                  usmap) #maps US data using FIPS code
 ```
 
-Read in data from the github [repository](https://github.com/haleyepperlyfox/us-cow-map).
+Read in data from the github [repository](https://github.com/haleyepperlyfox/us-cow-map){target="_blank"}.
 
 ```{r}
 #| label: load-data
@@ -152,7 +152,7 @@ We did it! 🥳
 
 A simple map showing where in the US there are fewer cows than there were in 1997 and where there are more cows. We can see that cows have mostly decreased in counties during those 20 years.
 
-That map conveys the information, but maybe we want to get a little extra spicy and add a picture of a cow to the plot. I found a free downloadable image of a cow from a clipart [website](http://clipart-library.com/cow-images-free.html). Then I read in the image using `readPNG` from the `png` package. I added the image into the plot using `inset_element` from the `patchwork` package, and I played around with where I wanted the image to go and how big it should be by adjusting the arguments for `left`, `bottom`, `right`, and `top`.
+That map conveys the information, but maybe we want to get a little extra spicy and add a picture of a cow to the plot. I found a free downloadable image of a cow from a clipart [website](http://clipart-library.com/cow-images-free.html){target="_blank"}. Then I read in the image using `readPNG` from the `png` package. I added the image into the plot using `inset_element` from the `patchwork` package, and I played around with where I wanted the image to go and how big it should be by adjusting the arguments for `left`, `bottom`, `right`, and `top`.
 
 ```{r}
 #| label: load-image

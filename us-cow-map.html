@@ -2549,7 +2549,7 @@ vertical-align: -.125em;
 
 <section id="about-the-data" class="level2" data-number="1">
 <h2 data-number="1" class="anchored" data-anchor-id="about-the-data"><span class="header-section-number">1</span> About the data 🐮</h2>
-<p>These data were collected as part of the US Agricultural Census and include the number of cows in each US county in 1997, 2002, 2007, 2012, and 2017. US counties are identified by their unique five digit FIPS code. Data were downloaded from the <a href="https://www.nass.usda.gov/AgCensus/">USDA - National Agricultural Statistics Service</a>.</p>
+<p>These data were collected as part of the US Agricultural Census and include the number of cows in each US county in 1997, 2002, 2007, 2012, and 2017. US counties are identified by their unique five digit FIPS code. Data were downloaded from the <a href="https://www.nass.usda.gov/AgCensus/" target="_blank">USDA - National Agricultural Statistics Service</a>.</p>
 </section>
 <section id="objectives" class="level2" data-number="2">
 <h2 data-number="2" class="anchored" data-anchor-id="objectives"><span class="header-section-number">2</span> Objectives</h2>
@@ -2580,7 +2580,7 @@ vertical-align: -.125em;
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>                 png, <span class="co">#for working with .png files in R</span></span>
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>                 usmap) <span class="co">#maps US data using FIPS code</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Read in data from the github <a href="https://github.com/haleyepperlyfox/us-cow-map">repository</a>.</p>
+<p>Read in data from the github <a href="https://github.com/haleyepperlyfox/us-cow-map" target="_blank">repository</a>.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>cows <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="fu">here</span>(<span class="st">&quot;1997_2017_us_county_cow_counts.csv&quot;</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -2708,7 +2708,7 @@ vertical-align: -.125em;
 </div>
 <p>We did it! 🥳</p>
 <p>A simple map showing where in the US there are fewer cows than there were in 1997 and where there are more cows. We can see that cows have mostly decreased in counties during those 20 years.</p>
-<p>That map conveys the information, but maybe we want to get a little extra spicy and add a picture of a cow to the plot. I found a free downloadable image of a cow from a clipart <a href="http://clipart-library.com/cow-images-free.html">website</a>. Then I read in the image using <code>readPNG</code> from the <code>png</code> package. I added the image into the plot using <code>inset_element</code> from the <code>patchwork</code> package, and I played around with where I wanted the image to go and how big it should be by adjusting the arguments for <code>left</code>, <code>bottom</code>, <code>right</code>, and <code>top</code>.</p>
+<p>That map conveys the information, but maybe we want to get a little extra spicy and add a picture of a cow to the plot. I found a free downloadable image of a cow from a clipart <a href="http://clipart-library.com/cow-images-free.html" target="_blank">website</a>. Then I read in the image using <code>readPNG</code> from the <code>png</code> package. I added the image into the plot using <code>inset_element</code> from the <code>patchwork</code> package, and I played around with where I wanted the image to go and how big it should be by adjusting the arguments for <code>left</code>, <code>bottom</code>, <code>right</code>, and <code>top</code>.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>my_image <span class="ot">&lt;-</span> <span class="fu">readPNG</span>(<span class="fu">here</span>(<span class="st">&quot;cow.png&quot;</span>), <span class="at">native =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
